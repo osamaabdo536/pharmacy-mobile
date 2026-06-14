@@ -38,3 +38,12 @@ class NotFoundFailure extends Failure {
   const NotFoundFailure([String message = 'The requested item was not found'])
       : super(message);
 }
+
+/// Not a real "error" — sign-up succeeded, but the user must verify
+/// their email before they can log in.
+class EmailConfirmationFailure extends Failure {
+  const EmailConfirmationFailure([
+    String message =
+    'Account created. Please check your email to verify your account before logging in.',
+  ]) : super(message);
+}

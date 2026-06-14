@@ -27,7 +27,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
     if (TokenStorage.hasToken()) {
-      context.go('/home');
+      context.go('/search');
     }
   }
 
