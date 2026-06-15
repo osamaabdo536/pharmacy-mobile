@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/storage/local_storage.dart';
+import 'core/utils/location_service.dart';
 import 'features/auth/data/models/auth_repository.dart';
+import 'features/chat/cubit/chat_cubit.dart';
+import 'features/chat/data/chat_repository.dart';
 import 'features/reservation/ui/reservations_list_screen.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/main_shell.dart';
@@ -27,11 +30,18 @@ class MyApp extends StatelessWidget {
     return MultiRepositoryProvider(
       providers: [
         RepositoryProvider<AuthRepository>(create: (_) => AuthRepository()),
+        RepositoryProvider<ChatRepository>(create: (_) => ChatRepository()),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider<AuthCubit>(
             create: (context) => AuthCubit(context.read<AuthRepository>()),
+          ),
+          BlocProvider<ChatCubit>(
+            create: (context) => ChatCubit(
+              repository: context.read<ChatRepository>(),
+              locationService: LocationService(),
+            ),
           ),
         ],
         child: MaterialApp.router(
@@ -62,18 +72,16 @@ final GoRouter _router = GoRouter(
       path: '/notifications',
       builder: (_, __) => const NotificationsScreen(),
     ),
+    GoRoute(path: '/chat', builder: (_, __) => const ChatScreen()),
 
-    // ─── Bottom navigation shell (4 tabs) ────────────────────
+    // ─── Bottom navigation shell (3 tabs: Search, Reservations, Profile) ─
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
       branches: [
         StatefulShellBranch(
           routes: [
-            GoRoute(
-              path: '/search',
-              builder: (_, __) => const SearchScreen(),
-            ),
+            GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
           ],
         ),
         StatefulShellBranch(
@@ -82,11 +90,6 @@ final GoRouter _router = GoRouter(
               path: '/reservations',
               builder: (_, __) => const ReservationsListScreen(),
             ),
-          ],
-        ),
-        StatefulShellBranch(
-          routes: [
-            GoRoute(path: '/chat', builder: (_, __) => const ChatScreen()),
           ],
         ),
         StatefulShellBranch(
@@ -102,7 +105,8 @@ final GoRouter _router = GoRouter(
   ],
   redirect: (context, state) {
     final isLoggedIn = TokenStorage.hasToken();
-    final isAuthRoute = state.matchedLocation == '/login' ||
+    final isAuthRoute =
+        state.matchedLocation == '/login' ||
         state.matchedLocation == '/register';
 
     if (!isLoggedIn && !isAuthRoute) return '/login';

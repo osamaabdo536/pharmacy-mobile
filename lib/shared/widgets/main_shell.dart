@@ -3,21 +3,38 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/app_colors.dart';
 
-/// Bottom-navigation shell wrapping the 4 main tabs:
-/// Search (= home), Reservations, AI Chat, Profile.
+/// Bottom-navigation shell wrapping 3 tabs: Search, Reservations, Profile.
 ///
-/// Also provides a shared AppBar (Dawak logo/name + notifications icon)
-/// across all 4 tabs.
+/// The AI Chat tab is a special case — tapping it pushes /chat as a
+/// full-screen route (no bottom nav) instead of switching a branch.
+///
+/// Also provides a shared AppBar (Dawak logo/name + notifications icon).
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   const MainShell({super.key, required this.navigationShell});
 
-  void _onTap(int index) {
+  /// Maps bottom nav index to shell branch index.
+  /// Index 2 (AI Support) is handled separately — it pushes /chat.
+  void _onTap(BuildContext context, int index) {
+    if (index == 2) {
+      // AI Support → full-screen push, not a shell branch
+      context.push('/chat');
+      return;
+    }
+    // Remap index: 0→0 (Search), 1→1 (Reservations), 3→2 (Profile)
+    final branchIndex = index < 2 ? index : index - 1;
     navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
+      branchIndex,
+      initialLocation: branchIndex == navigationShell.currentIndex,
     );
+  }
+
+  /// Which bottom nav item is visually selected.
+  /// Chat (index 2) is never "selected" since it's a push route.
+  int get _selectedIndex {
+    final branchIndex = navigationShell.currentIndex;
+    return branchIndex < 2 ? branchIndex : branchIndex + 1;
   }
 
   @override
@@ -28,18 +45,27 @@ class MainShell extends StatelessWidget {
         titleSpacing: 16,
         title: Row(
           children: [
-            // ─── Logo placeholder (swap with SVG later) ──────
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.shield_outlined,
-                color: Colors.white,
-                size: 16,
+            // ─── Logo (swap container with Image.asset when SVG is ready) ──
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/images/Dawak_Icon.png',
+                width: 28,
+                height: 28,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.shield_outlined,
+                    color: Colors.white,
+                    size: 16,
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -63,8 +89,8 @@ class MainShell extends StatelessWidget {
       ),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onTap,
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) => _onTap(context, index),
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primaryContainer,
         destinations: const [
@@ -75,14 +101,12 @@ class MainShell extends StatelessWidget {
           ),
           NavigationDestination(
             icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon:
-            Icon(Icons.calendar_today, color: AppColors.primary),
+            selectedIcon: Icon(Icons.calendar_today, color: AppColors.primary),
             label: 'Reservation',
           ),
           NavigationDestination(
             icon: Icon(Icons.support_agent_outlined),
-            selectedIcon:
-            Icon(Icons.support_agent, color: AppColors.primary),
+            selectedIcon: Icon(Icons.support_agent, color: AppColors.primary),
             label: 'AI Support',
           ),
           NavigationDestination(
