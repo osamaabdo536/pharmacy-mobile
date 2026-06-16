@@ -33,4 +33,23 @@ class ReservationRepository {
 
     return ReservationModel.fromJson(rawData);
   }
+
+  Future<ReservationModel> createReservation({
+    required String inventoryId,
+    required int quantity,
+  }) async {
+    final response = await _dio.post(
+      ApiConstants.reservations,
+      data: {'inventoryId': inventoryId, 'quantity': quantity},
+    );
+    final rawData = response.data is Map<String, dynamic>
+        ? response.data['data']
+        : response.data;
+
+    if (rawData is! Map<String, dynamic>) {
+      throw StateError('Invalid reservation response');
+    }
+
+    return ReservationModel.fromJson(rawData);
+  }
 }

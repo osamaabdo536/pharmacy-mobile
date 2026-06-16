@@ -39,6 +39,7 @@ dependencies:
   dio: ^5.9.2
   supabase_flutter: ^2.14.2
   geolocator: ^14.0.2
+  geocoding: ^3.0.0
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   firebase_messaging: ^16.3.0
