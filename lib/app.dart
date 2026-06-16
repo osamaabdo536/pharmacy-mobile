@@ -17,10 +17,15 @@ import 'features/auth/ui/register_screen.dart';
 import 'features/auth/cubit/auth_cubit.dart';
 
 import 'features/search/ui/search_screen.dart';
+import 'features/search/ui/drug_detail_screen.dart';
+import 'features/search/data/models/trending_drug_model.dart';
 import 'features/reservation/ui/reservation_screen.dart';
 import 'features/chat/ui/chat_screen.dart';
 import 'features/profile/ui/profile_screen.dart';
 import 'features/notifications/ui/notifications_screen.dart';
+
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -56,6 +61,7 @@ class MyApp extends StatelessWidget {
 }
 
 final GoRouter _router = GoRouter(
+  navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
@@ -70,9 +76,14 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/notifications',
+      parentNavigatorKey: _rootNavigatorKey,
       builder: (_, __) => const NotificationsScreen(),
     ),
-    GoRoute(path: '/chat', builder: (_, __) => const ChatScreen()),
+    GoRoute(
+      path: '/chat',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (_, __) => const ChatScreen(),
+    ),
 
     // ─── Bottom navigation shell (3 tabs: Search, Reservations, Profile) ─
     StatefulShellRoute.indexedStack(
@@ -81,7 +92,25 @@ final GoRouter _router = GoRouter(
       branches: [
         StatefulShellBranch(
           routes: [
-            GoRoute(path: '/search', builder: (_, __) => const SearchScreen()),
+            GoRoute(
+              path: '/search',
+              builder: (_, __) => const SearchScreen(),
+              routes: [
+                GoRoute(
+                  path: 'drug-detail/:id',
+                  builder: (context, state) {
+                    final drug = state.extra as TrendingDrugModel?;
+                    return drug != null
+                        ? DrugDetailScreen(drug: drug)
+                        : const Scaffold(
+                            body: Center(
+                              child: Text('No medicine data available.'),
+                            ),
+                          );
+                  },
+                ),
+              ],
+            ),
           ],
         ),
         StatefulShellBranch(
