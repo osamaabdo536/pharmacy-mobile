@@ -12,6 +12,7 @@ import 'shared/theme/app_theme.dart';
 import 'shared/widgets/main_shell.dart';
 
 import 'features/onboarding/ui/splash_screen.dart';
+import 'features/onboarding/ui/onboarding_screen.dart';
 import 'features/auth/ui/login_screen.dart';
 import 'features/auth/ui/register_screen.dart';
 import 'features/auth/cubit/auth_cubit.dart';
@@ -59,6 +60,7 @@ final GoRouter _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
+    GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
 
@@ -105,12 +107,16 @@ final GoRouter _router = GoRouter(
   ],
   redirect: (context, state) {
     final isLoggedIn = TokenStorage.hasToken();
-    final isAuthRoute =
-        state.matchedLocation == '/login' ||
-        state.matchedLocation == '/register';
+    final location = state.matchedLocation;
+    final isPublicRoute = location == '/' ||
+        location == '/onboarding' ||
+        location == '/login' ||
+        location == '/register';
 
-    if (!isLoggedIn && !isAuthRoute) return '/login';
-    if (isLoggedIn && isAuthRoute) return '/search';
+    if (!isLoggedIn && !isPublicRoute) return '/login';
+    if (isLoggedIn && (location == '/login' || location == '/register')) {
+      return '/search';
+    }
     return null;
   },
 );
