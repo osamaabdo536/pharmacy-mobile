@@ -11,7 +11,8 @@ class SearchCubit extends Cubit<SearchState> {
   final SearchRepository _repository;
   final LocationService _locationService;
 
-  SearchCubit(this._repository, this._locationService) : super(const SearchState());
+  SearchCubit(this._repository, this._locationService)
+    : super(const SearchState());
 
   Future<void> initializeSearch() async {
     await loadTrending(limit: 8);
@@ -35,19 +36,25 @@ class SearchCubit extends Cubit<SearchState> {
 
   Future<void> loadLocation() async {
     try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission =
+            await Geolocator.requestPermission(); // ده اللي بيظهر الـ dialog
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          emit(state.copyWith(locationName: 'Location not available'));
+          return;
+        }
+      }
+
       final position = await _locationService.getCurrentPosition();
       if (position != null) {
         final locationName = await _getLocationName(position);
         emit(
-          state.copyWith(
-            currentLocation: position,
-            locationName: locationName,
-          ),
+          state.copyWith(currentLocation: position, locationName: locationName),
         );
       }
-    } catch (_) {
-      // GPS failure should never block search
-    }
+    } catch (_) {}
   }
 
   Future<String> _getLocationName(Position position) async {
@@ -76,11 +83,10 @@ class SearchCubit extends Cubit<SearchState> {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return;
 
-    final updated = [trimmed, ...state.recentSearches]
-        .toSet()
-        .toList()
-        .take(10)
-        .toList();
+    final updated = [
+      trimmed,
+      ...state.recentSearches,
+    ].toSet().toList().take(10).toList();
 
     emit(state.copyWith(recentSearches: updated));
   }
@@ -96,12 +102,7 @@ class SearchCubit extends Cubit<SearchState> {
 
   Future<void> updateLocation(Position position) async {
     final locationName = await _getLocationName(position);
-    emit(
-      state.copyWith(
-        currentLocation: position,
-        locationName: locationName,
-      ),
-    );
+    emit(state.copyWith(currentLocation: position, locationName: locationName));
   }
 
   String _messageFromError(Object error) {
@@ -109,4 +110,3 @@ class SearchCubit extends Cubit<SearchState> {
     return error.toString();
   }
 }
-
