@@ -14,11 +14,7 @@ class SearchRepository {
       queryParameters: {'limit': limit},
     );
 
-    final rawData = response.data is Map<String, dynamic>
-        ? response.data['data'] ??
-              response.data['items'] ??
-              response.data['results']
-        : response.data;
+    final rawData = _extractList(response.data);
 
     if (rawData is! List) {
       return [];
@@ -27,6 +23,35 @@ class SearchRepository {
     return rawData
         .whereType<Map<String, dynamic>>()
         .map(TrendingDrugModel.fromJson)
+        .toList();
+  }
+
+  Future<List<TrendingDrugModel>> searchDrugs(
+    String query, {
+    required double lat,
+    required double lng,
+    double radius = 100,
+  }) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      return [];
+    }
+
+    final response = await _dio.get(
+      ApiConstants.drugSearch,
+      queryParameters: {'q': trimmed, 'lat': lat, 'lng': lng, 'radius': radius},
+    );
+
+    final rawData = _extractList(response.data);
+
+    if (rawData is! List) {
+      return [];
+    }
+
+    return rawData
+        .whereType<Map<String, dynamic>>()
+        .map(TrendingDrugModel.fromJson)
+        .where((drug) => drug.id.isNotEmpty)
         .toList();
   }
 
@@ -40,11 +65,7 @@ class SearchRepository {
       ApiConstants.drugNearby(drugId),
       queryParameters: {'lat': lat, 'lng': lng, 'radius': radius},
     );
-    final rawData = response.data is Map<String, dynamic>
-        ? response.data['data'] ??
-              response.data['items'] ??
-              response.data['results']
-        : response.data;
+    final rawData = _extractList(response.data);
 
     if (rawData is! List) {
       return [];
@@ -87,5 +108,32 @@ class SearchRepository {
     }
 
     return byPharmacy.values.toList();
+  }
+
+  List<dynamic>? _extractList(dynamic payload) {
+    if (payload is List) {
+      return payload;
+    }
+
+    if (payload is! Map<String, dynamic>) {
+      return null;
+    }
+
+    for (final key in ['data', 'items', 'results', 'drugs', 'inventory']) {
+      final value = payload[key];
+
+      if (value is List) {
+        return value;
+      }
+
+      if (value is Map<String, dynamic>) {
+        final nested = _extractList(value);
+        if (nested != null) {
+          return nested;
+        }
+      }
+    }
+
+    return null;
   }
 }
