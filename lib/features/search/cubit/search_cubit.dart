@@ -156,6 +156,10 @@ class SearchCubit extends Cubit<SearchState> {
     emit(state.copyWith(currentLocation: position, locationName: locationName));
   }
 
+  void updateLocationName(String name) {
+    emit(state.copyWith(locationName: name));
+  }
+
   String _messageFromError(Object error) {
     if (error is Failure) return error.message;
     return error.toString();
