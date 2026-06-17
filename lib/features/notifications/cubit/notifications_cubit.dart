@@ -73,7 +73,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       createdAt: original.createdAt,
       isRead: true,
       type: original.type,
-      data: original.data,
     );
 
     emit(state.copyWith(notifications: updatedList, clearError: true));
@@ -108,7 +107,6 @@ class NotificationsCubit extends Cubit<NotificationsState> {
             createdAt: notification.createdAt,
             isRead: true,
             type: notification.type,
-            data: notification.data,
           ),
         )
         .toList();

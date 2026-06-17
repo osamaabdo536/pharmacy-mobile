@@ -5,7 +5,6 @@ class NotificationModel {
   final DateTime createdAt;
   final bool isRead;
   final String? type;
-  final Map<String, dynamic>? data;
 
   const NotificationModel({
     required this.id,
@@ -14,36 +13,9 @@ class NotificationModel {
     required this.createdAt,
     required this.isRead,
     this.type,
-    this.data,
   });
 
   bool get isUnread => !isRead;
-
-  String? get primaryActionLabel {
-    final label = data?['action_label'] ?? data?['primary_action'];
-    if (label is String && label.isNotEmpty) return label;
-    return _inferredActions().$1;
-  }
-
-  String? get secondaryActionLabel {
-    final label = data?['secondary_action'];
-    if (label is String && label.isNotEmpty) return label;
-    return _inferredActions().$2;
-  }
-
-  bool get primaryActionIsOutlined => _inferredActions().$3;
-
-  (String?, String?, bool) _inferredActions() {
-    switch (type) {
-      case 'medication_expiring':
-      case 'prescription_expiring':
-        return ('Renew Now', null, false);
-      case 'reservation_expired':
-        return (null, 'Re-order', true);
-      default:
-        return (null, null, false);
-    }
-  }
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     // Some backends wrap the actual fields under a `data` key.
@@ -58,7 +30,6 @@ class NotificationModel {
           DateTime.now(),
       isRead: _asBool(payload['is_read']) || _asBool(payload['read']),
       type: _nullableString(payload['type']),
-      data: _asMap(payload['metadata']),
     );
   }
 
