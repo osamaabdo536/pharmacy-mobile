@@ -11,6 +11,8 @@ class TokenStorage {
 
   static late SharedPreferences _prefs;
 
+  static SharedPreferences get prefs => _prefs;
+
   static const _keyAccessToken = 'access_token';
   static const _keyRefreshToken = 'refresh_token';
 
@@ -50,4 +52,17 @@ class TokenStorage {
     await _prefs.remove(_keyAccessToken);
     await _prefs.remove(_keyRefreshToken);
   }
+}
+
+/// Tracks whether the user has completed the first-launch onboarding flow.
+class OnboardingStorage {
+  OnboardingStorage._();
+
+  static const _keyOnboardingCompleted = 'onboarding_completed';
+
+  static bool hasCompletedOnboarding() =>
+      TokenStorage.prefs.getBool(_keyOnboardingCompleted) ?? false;
+
+  static Future<void> setOnboardingCompleted() =>
+      TokenStorage.prefs.setBool(_keyOnboardingCompleted, true);
 }

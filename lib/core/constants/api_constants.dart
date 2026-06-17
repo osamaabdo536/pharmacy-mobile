@@ -15,7 +15,9 @@ class ApiConstants {
 
   // ─── Drug Search ────────────────────────────────────
   static const String drugSearch = '/drugs/search';
+  static const String drugTrending = '/drugs/trending';
   static String drugNearby(String drugId) => '/drugs/$drugId/nearby';
+  static const String pharmacyInventory = '/pharmacy/inventory';
 
   // ─── Reservations ───────────────────────────────────
   static const String reservations = '/reservations';

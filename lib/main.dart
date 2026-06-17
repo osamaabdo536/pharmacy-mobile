@@ -7,8 +7,8 @@ import 'core/storage/local_storage.dart';
 
 // TODO: uncomment once `flutterfire configure` is done and
 // `firebase_options.dart` exists in lib/
-// import 'package:firebase_core/firebase_core.dart';
-// import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +19,9 @@ Future<void> main() async {
   await TokenStorage.init();
 
   // 3. Init Firebase — BLOCKED until firebase_options.dart exists
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // 4. Init Supabase
   await Supabase.initialize(
