@@ -1,8 +1,10 @@
-class ReservationModel {
+﻿class ReservationModel {
   final String id;
   final String shortCode;
   final String status;
   final int quantity;
+  final double priceAtReservation;
+  final double discountAtReservation;
   final double totalPrice;
   final DateTime? createdAt;
   final DateTime? expiresAt;
@@ -18,6 +20,8 @@ class ReservationModel {
     required this.shortCode,
     required this.status,
     required this.quantity,
+    required this.priceAtReservation,
+    required this.discountAtReservation,
     required this.totalPrice,
     required this.createdAt,
     required this.expiresAt,
@@ -32,6 +36,25 @@ class ReservationModel {
   bool get canCancel => status.toLowerCase() == 'pending';
 
   String get normalizedStatus => status.toLowerCase();
+
+  double get discountPercentage {
+    if (discountAtReservation > 0) return discountAtReservation;
+
+    final baseTotal = priceAtReservation * quantity;
+    if (baseTotal <= 0 || totalPrice >= baseTotal) return 0;
+    return ((baseTotal - totalPrice) / baseTotal) * 100;
+  }
+
+  bool get hasDiscount => discountPercentage > 0;
+
+  int get roundedDiscount => discountPercentage.round();
+
+  double get originalTotal {
+    final baseTotal = priceAtReservation * quantity;
+    if (baseTotal > 0) return baseTotal;
+    if (!hasDiscount || discountPercentage >= 100) return totalPrice;
+    return totalPrice / (1 - (discountPercentage / 100));
+  }
 
   String get displayDrug {
     final parts = [drugName, drugStrength, dosageForm]
@@ -51,6 +74,8 @@ class ReservationModel {
       shortCode: _asString(json['short_code'], fallback: 'MC-0000'),
       status: _asString(json['status'], fallback: 'pending'),
       quantity: _asInt(json['quantity']),
+      priceAtReservation: _asDouble(json['price_at_reservation']),
+      discountAtReservation: _asDouble(json['discount_at_reservation']),
       totalPrice: _asDouble(json['total_price']),
       createdAt: _asDate(json['created_at']),
       expiresAt: _asDate(json['expires_at']),

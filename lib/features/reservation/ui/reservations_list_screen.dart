@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../shared/theme/app_colors.dart';
 import '../cubit/reservation_cubit.dart';
@@ -127,6 +128,8 @@ class _ReservationsListScreenState extends State<ReservationsListScreen> {
             final reservation = reservations[index];
             return _ReservationCard(
               reservation: reservation,
+              onTap: () =>
+                  context.push('/reservations/details/${reservation.id}'),
               isCancelling: loaded.cancellingId == reservation.id,
               onCancel: reservation.canCancel
                   ? () => _confirmCancel(context, reservation)
@@ -241,11 +244,13 @@ class _FilterTabs extends StatelessWidget {
 class _ReservationCard extends StatelessWidget {
   final ReservationModel reservation;
   final bool isCancelling;
+  final VoidCallback? onTap;
   final VoidCallback? onCancel;
 
   const _ReservationCard({
     required this.reservation,
     required this.isCancelling,
+    required this.onTap,
     required this.onCancel,
   });
 
@@ -253,181 +258,189 @@ class _ReservationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusStyle = _statusStyle(reservation.normalizedStatus);
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'ORDER ID',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textHint,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      reservation.shortCode,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      reservation.pharmacyName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _StatusBadge(
-                label: statusStyle.label,
-                icon: statusStyle.icon,
-                color: statusStyle.color,
-                background: statusStyle.background,
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _MetaItem(
-                  icon: Icons.calendar_today_outlined,
-                  label: _formatDate(reservation.createdAt),
-                ),
-              ),
-              Expanded(
-                child: _MetaItem(
-                  icon: Icons.access_time,
-                  label: _formatTime(reservation.createdAt),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _MetaItem(
-                  icon: reservation.normalizedStatus == 'pending'
-                      ? Icons.local_shipping_outlined
-                      : Icons.shopping_bag_outlined,
-                  label: reservation.normalizedStatus == 'pending'
-                      ? 'Delivery'
-                      : 'Pickup',
-                ),
-              ),
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                    ),
-                    children: [
-                      const TextSpan(text: 'Total: '),
-                      TextSpan(
-                        text: '\$${reservation.totalPrice.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w800,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'ORDER ID',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textHint,
+                          ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          reservation.shortCode,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          reservation.pharmacyName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _StatusBadge(
+                    label: statusStyle.label,
+                    icon: statusStyle.icon,
+                    color: statusStyle.color,
+                    background: statusStyle.background,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetaItem(
+                      icon: Icons.calendar_today_outlined,
+                      label: _formatDate(reservation.createdAt),
+                    ),
+                  ),
+                  Expanded(
+                    child: _MetaItem(
+                      icon: Icons.access_time,
+                      label: _formatTime(reservation.createdAt),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetaItem(
+                      icon: reservation.normalizedStatus == 'pending'
+                          ? Icons.local_shipping_outlined
+                          : Icons.shopping_bag_outlined,
+                      label: reservation.normalizedStatus == 'pending'
+                          ? 'Delivery'
+                          : 'Pickup',
+                    ),
+                  ),
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                        children: [
+                          const TextSpan(text: 'Total: '),
+                          TextSpan(
+                            text:
+                                '\$${reservation.totalPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Text(
+                  _messageForStatus(reservation),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    height: 1.45,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
+              if (reservation.normalizedStatus == 'pending' &&
+                  reservation.expiresAt != null) ...[
+                const SizedBox(height: 10),
+                _ExpiryNotice(expiresAt: reservation.expiresAt!),
+              ],
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: OutlinedButton(
+                  onPressed: onCancel,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: onCancel == null
+                        ? AppColors.textSecondary
+                        : AppColors.error,
+                    backgroundColor: onCancel == null
+                        ? const Color(0xFFE5E9F0)
+                        : Colors.white,
+                    side: BorderSide(
+                      color: onCancel == null
+                          ? const Color(0xFFE5E9F0)
+                          : AppColors.error,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  child: isCancelling
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Cancel Reservation'),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Text(
-              _messageForStatus(reservation),
-              style: const TextStyle(
-                fontSize: 12,
-                height: 1.45,
-                fontStyle: FontStyle.italic,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          if (reservation.normalizedStatus == 'pending' &&
-              reservation.expiresAt != null) ...[
-            const SizedBox(height: 10),
-            _ExpiryNotice(expiresAt: reservation.expiresAt!),
-          ],
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: OutlinedButton(
-              onPressed: onCancel,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: onCancel == null
-                    ? AppColors.textSecondary
-                    : AppColors.error,
-                backgroundColor: onCancel == null
-                    ? const Color(0xFFE5E9F0)
-                    : Colors.white,
-                side: BorderSide(
-                  color: onCancel == null
-                      ? const Color(0xFFE5E9F0)
-                      : AppColors.error,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              child: isCancelling
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Cancel Reservation'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
