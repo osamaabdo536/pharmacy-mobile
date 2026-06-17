@@ -21,6 +21,17 @@ class ReservationRepository {
         .toList();
   }
 
+  Future<ReservationModel?> findReservationById(String id) async {
+    final reservations = await getMyReservations();
+    for (final reservation in reservations) {
+      if (reservation.id == id ||
+          reservation.shortCode.toUpperCase() == id.toUpperCase()) {
+        return reservation;
+      }
+    }
+    return null;
+  }
+
   Future<ReservationModel> cancelReservation(String id) async {
     final response = await _dio.delete(ApiConstants.cancelReservation(id));
     final rawData = response.data is Map<String, dynamic>
