@@ -27,13 +27,17 @@ class _DrugDetailScreenState extends State<DrugDetailScreen> {
   }
 
   Future<List<PharmacyResultModel>> _loadNearbyPharmacies() async {
+    if (widget.drug.hasPharmacyResults) {
+      return widget.drug.pharmacies;
+    }
+
     final position = await LocationService().getCurrentPosition();
 
     return SearchRepository().getNearbyPharmacies(
       widget.drug.id,
       lat: position?.latitude ?? 30.0444,
       lng: position?.longitude ?? 31.2357,
-      radius: 10,
+      radius: 100,
     );
   }
 
@@ -443,13 +447,19 @@ class _DrugDetailScreenState extends State<DrugDetailScreen> {
   }
 
   String get _categoryLine {
-    final parts = [widget.drug.dosageForm, widget.drug.manufacturer]
-        .where((part) => part != null && part.trim().isNotEmpty)
-        .cast<String>()
-        .toList();
+    final parts =
+        [
+              widget.drug.genericName ?? widget.drug.activeIngredient,
+              widget.drug.category,
+              widget.drug.dosageForm,
+              widget.drug.manufacturer,
+            ]
+            .where((part) => part != null && part.trim().isNotEmpty)
+            .cast<String>()
+            .toList();
 
     if (parts.isEmpty) {
-      return 'Antibiotic: Capsules';
+      return 'Medicine details';
     }
 
     return parts.join(': ');

@@ -34,6 +34,57 @@ class SearchCubit extends Cubit<SearchState> {
     }
   }
 
+  Future<void> searchDrugs(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+
+    addRecentSearch(trimmed);
+    emit(
+      state.copyWith(
+        drugSearchStatus: DrugSearchStatus.loading,
+        searchQuery: trimmed,
+        searchResults: const [],
+        searchErrorMessage: '',
+      ),
+    );
+
+    try {
+      final position = state.currentLocation;
+      final results = await _repository.searchDrugs(
+        trimmed,
+        lat: position?.latitude ?? 30.0444,
+        lng: position?.longitude ?? 31.2357,
+        radius: 100,
+      );
+      emit(
+        state.copyWith(
+          drugSearchStatus: DrugSearchStatus.loaded,
+          searchResults: results,
+          searchErrorMessage: '',
+        ),
+      );
+    } catch (error) {
+      emit(
+        state.copyWith(
+          drugSearchStatus: DrugSearchStatus.error,
+          searchResults: const [],
+          searchErrorMessage: _messageFromError(error),
+        ),
+      );
+    }
+  }
+
+  void clearSearchResults() {
+    emit(
+      state.copyWith(
+        drugSearchStatus: DrugSearchStatus.initial,
+        searchResults: const [],
+        searchQuery: '',
+        searchErrorMessage: '',
+      ),
+    );
+  }
+
   Future<void> loadLocation() async {
     try {
       LocationPermission permission = await Geolocator.checkPermission();
@@ -83,10 +134,10 @@ class SearchCubit extends Cubit<SearchState> {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return;
 
-    final updated = [
+    final updated = {
       trimmed,
       ...state.recentSearches,
-    ].toSet().toList().take(10).toList();
+    }.toList().take(10).toList();
 
     emit(state.copyWith(recentSearches: updated));
   }

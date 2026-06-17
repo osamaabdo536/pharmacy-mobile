@@ -8,6 +8,7 @@ import '../../../shared/widgets/loading_widget.dart';
 import '../../../shared/widgets/trending_drug_card.dart';
 import '../cubit/search_cubit.dart';
 import '../cubit/search_state.dart';
+import '../data/models/trending_drug_model.dart';
 import '../data/search_repository.dart';
 
 class SearchScreen extends StatelessWidget {
@@ -52,39 +53,67 @@ class _SearchViewState extends State<_SearchView> {
 
             return BlocBuilder<SearchCubit, SearchState>(
               builder: (context, state) {
+                final hasActiveSearch =
+                    state.drugSearchStatus != DrugSearchStatus.initial ||
+                    state.searchQuery.isNotEmpty;
+
                 return CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(child: _buildHeader(context, state)),
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(
-                        title: 'Recent searches',
-                        actionLabel: state.recentSearches.isEmpty
-                            ? null
-                            : 'Clear all',
-                        action: state.recentSearches.isEmpty
-                            ? null
-                            : () => context
-                                  .read<SearchCubit>()
-                                  .clearRecentSearches(),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _buildRecentSearches(context, state),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _buildSectionTitle(title: 'Trending medicines'),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      sliver: SliverToBoxAdapter(
-                        child: _buildTrendingMedicines(
-                          context,
-                          state,
-                          crossAxisCount,
-                          cardAspect,
+                    if (hasActiveSearch) ...[
+                      SliverToBoxAdapter(
+                        child: _buildSectionTitle(
+                          title: 'Search results',
+                          actionLabel: 'Clear',
+                          action: () {
+                            _searchController.clear();
+                            context.read<SearchCubit>().clearSearchResults();
+                          },
                         ),
                       ),
-                    ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                        sliver: SliverToBoxAdapter(
+                          child: _buildSearchResults(
+                            context,
+                            state,
+                            crossAxisCount,
+                            cardAspect,
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      SliverToBoxAdapter(
+                        child: _buildSectionTitle(
+                          title: 'Recent searches',
+                          actionLabel: state.recentSearches.isEmpty
+                              ? null
+                              : 'Clear all',
+                          action: state.recentSearches.isEmpty
+                              ? null
+                              : () => context
+                                    .read<SearchCubit>()
+                                    .clearRecentSearches(),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: _buildRecentSearches(context, state),
+                      ),
+                      SliverToBoxAdapter(
+                        child: _buildSectionTitle(title: 'Trending medicines'),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                        sliver: SliverToBoxAdapter(
+                          child: _buildTrendingMedicines(
+                            context,
+                            state,
+                            crossAxisCount,
+                            cardAspect,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 );
               },
@@ -120,7 +149,7 @@ class _SearchViewState extends State<_SearchView> {
             ),
           ),
           const SizedBox(height: 18),
-          _buildSearchBar(context),
+          _buildSearchBar(context, state),
           const SizedBox(height: 18),
           _buildLocationCard(context, displayLocation),
         ],
@@ -128,7 +157,7 @@ class _SearchViewState extends State<_SearchView> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
+  Widget _buildSearchBar(BuildContext context, SearchState state) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -138,18 +167,26 @@ class _SearchViewState extends State<_SearchView> {
         controller: _searchController,
         onSubmitted: (query) {
           if (query.trim().isNotEmpty) {
-            context.read<SearchCubit>().addRecentSearch(query);
-            _searchController.clear();
+            context.read<SearchCubit>().searchDrugs(query);
           }
         },
+        textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: 'Brand, generic or active ingredient',
           hintStyle: const TextStyle(color: AppColors.textHint),
           prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.filter_list, color: AppColors.primary),
-            onPressed: () {},
-          ),
+          suffixIcon: state.searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close, color: AppColors.primary),
+                  onPressed: () {
+                    _searchController.clear();
+                    context.read<SearchCubit>().clearSearchResults();
+                  },
+                )
+              : IconButton(
+                  icon: const Icon(Icons.filter_list, color: AppColors.primary),
+                  onPressed: () {},
+                ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             vertical: 16,
@@ -293,6 +330,10 @@ class _SearchViewState extends State<_SearchView> {
               border: Border.all(color: AppColors.border),
             ),
             child: ListTile(
+              onTap: () {
+                _searchController.text = term;
+                context.read<SearchCubit>().searchDrugs(term);
+              },
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 6,
@@ -353,13 +394,80 @@ class _SearchViewState extends State<_SearchView> {
       );
     }
 
+    return _buildDrugGrid(
+      drugs: state.trending,
+      crossAxisCount: crossAxisCount,
+      cardAspect: cardAspect,
+    );
+  }
+
+  Widget _buildSearchResults(
+    BuildContext context,
+    SearchState state,
+    int crossAxisCount,
+    double cardAspect,
+  ) {
+    if (state.drugSearchStatus == DrugSearchStatus.loading) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: LoadingWidget(message: 'Searching for ${state.searchQuery}...'),
+      );
+    }
+
+    if (state.drugSearchStatus == DrugSearchStatus.error) {
+      final message = state.searchErrorMessage?.isNotEmpty == true
+          ? state.searchErrorMessage!
+          : 'Unable to search medicines.';
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Center(
+          child: Text(
+            message,
+            style: const TextStyle(color: AppColors.error, fontSize: 15),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (state.drugSearchStatus == DrugSearchStatus.loaded &&
+        state.searchResults.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Center(
+          child: Text(
+            'No medicines found for "${state.searchQuery}".',
+            style: const TextStyle(color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    if (state.searchResults.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return _buildDrugGrid(
+      drugs: state.searchResults,
+      crossAxisCount: crossAxisCount,
+      cardAspect: cardAspect,
+    );
+  }
+
+  Widget _buildDrugGrid({
+    required List<TrendingDrugModel> drugs,
+    required int crossAxisCount,
+    required double cardAspect,
+  }) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 760),
         child: GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: state.trending.length,
+          itemCount: drugs.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
@@ -367,7 +475,7 @@ class _SearchViewState extends State<_SearchView> {
             childAspectRatio: cardAspect,
           ),
           itemBuilder: (context, index) {
-            return TrendingDrugCard(drug: state.trending[index]);
+            return TrendingDrugCard(drug: drugs[index]);
           },
         ),
       ),
