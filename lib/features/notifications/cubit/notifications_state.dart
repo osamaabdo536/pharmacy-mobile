@@ -51,13 +51,15 @@ class NotificationsState extends Equatable {
 
     final result = <NotificationSection>[];
     if (today.isNotEmpty) {
-      result.add(NotificationSection(label: 'Today', items: today));
+      result.add(NotificationSection(label: 'TODAY', items: today));
     }
     if (yesterday.isNotEmpty) {
-      result.add(NotificationSection(label: 'Yesterday', items: yesterday));
+      result.add(NotificationSection(label: 'YESTERDAY', items: yesterday));
     }
     if (earlier.isNotEmpty) {
-      result.add(NotificationSection(label: 'Earlier this week', items: earlier));
+      result.add(
+        NotificationSection(label: 'EARLIER THIS WEEK', items: earlier),
+      );
     }
     return result;
   }

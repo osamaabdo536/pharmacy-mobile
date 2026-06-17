@@ -6,8 +6,8 @@ import '../../../shared/theme/app_colors.dart';
 import '../../../shared/utils/responsive.dart';
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
-import '../data/models/notification_model.dart';
 import '../data/notifications_repository.dart';
+import 'widgets/notification_card.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -55,32 +55,8 @@ class _NotificationsView extends StatelessWidget {
         final cubit = context.read<NotificationsCubit>();
 
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Notifications'),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: state.hasUnread && !state.isMarkingAll
-                    ? () => cubit.markAllAsRead()
-                    : null,
-                child: state.isMarkingAll
-                    ? SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.primary,
-                          ),
-                        ),
-                      )
-                    : const Text('Mark all as read'),
-              ),
-            ],
-          ),
+          backgroundColor: AppColors.surfaceVariant,
+          appBar: _NotificationsAppBar(onBack: () => context.pop()),
           body: RefreshIndicator(
             onRefresh: cubit.refresh,
             child: CustomScrollView(
@@ -89,9 +65,7 @@ class _NotificationsView extends StatelessWidget {
                 if (state.isLoading && state.notifications.isEmpty)
                   const SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: Center(child: CircularProgressIndicator()),
                   )
                 else if (state.notifications.isEmpty)
                   const SliverFillRemaining(
@@ -99,7 +73,8 @@ class _NotificationsView extends StatelessWidget {
                     child: _EmptyState(),
                   )
                 else
-                  ..._buildSections(context, state),
+                  ..._buildSections(context, state, cubit),
+                SliverToBoxAdapter(child: SizedBox(height: context.scale(24))),
               ],
             ),
           ),
@@ -111,28 +86,42 @@ class _NotificationsView extends StatelessWidget {
   List<Widget> _buildSections(
     BuildContext context,
     NotificationsState state,
+    NotificationsCubit cubit,
   ) {
     final sections = state.sections;
     final widgets = <Widget>[];
 
-    for (final section in sections) {
+    for (var i = 0; i < sections.length; i++) {
+      final section = sections[i];
+      final isFirst = i == 0;
+
       widgets.add(
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(
               context.pagePadding,
-              context.scale(16),
+              context.scale(20),
               context.pagePadding,
-              context.scale(8),
+              context.scale(10),
             ),
-            child: Text(
-              section.label,
-              style: TextStyle(
-                fontSize: context.scale(14),
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-                letterSpacing: 0.4,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  section.label,
+                  style: TextStyle(
+                    fontSize: context.scale(11),
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const Spacer(),
+                if (isFirst && state.hasUnread)
+                  _MarkAllAsReadButton(
+                    isLoading: state.isMarkingAll,
+                    onPressed: cubit.markAllAsRead,
+                  ),
+              ],
             ),
           ),
         ),
@@ -140,15 +129,12 @@ class _NotificationsView extends StatelessWidget {
 
       widgets.add(
         SliverPadding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.pagePadding,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: context.pagePadding),
           sliver: SliverList.separated(
             itemCount: section.items.length,
-            separatorBuilder: (_, __) => SizedBox(height: context.scale(8)),
+            separatorBuilder: (_, __) => SizedBox(height: context.scale(12)),
             itemBuilder: (context, index) {
-              final notification = section.items[index];
-              return _NotificationCard(notification: notification);
+              return NotificationCard(notification: section.items[index]);
             },
           ),
         ),
@@ -159,164 +145,106 @@ class _NotificationsView extends StatelessWidget {
   }
 }
 
-class _NotificationCard extends StatelessWidget {
-  final NotificationModel notification;
+class _NotificationsAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final VoidCallback onBack;
 
-  const _NotificationCard({required this.notification});
+  const _NotificationsAppBar({required this.onBack});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
-    final isUnread = notification.isUnread;
-    final created = notification.createdAt.toLocal();
-    final timeLabel =
-        '${_hourString(created.hour)}:${created.minute.toString().padLeft(2, '0')} ${created.hour >= 12 ? 'PM' : 'AM'}';
-
-    final type = notification.type ?? '';
-    final visual = _typeVisual(type);
-
-    return InkWell(
-      onTap: () =>
-          context.read<NotificationsCubit>().markAsRead(notification.id),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: EdgeInsets.all(context.scale(12)),
-        decoration: BoxDecoration(
-          color: isUnread ? AppColors.primaryContainer : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isUnread ? AppColors.primary : AppColors.border,
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      centerTitle: true,
+      leading: Padding(
+        padding: const EdgeInsets.only(left: 8),
+        child: IconButton(
+          onPressed: onBack,
+          icon: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/images/Dawak_Icon.png',
+              width: 28,
+              height: 28,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.shield_outlined,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
           ),
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: context.scale(36),
-              height: context.scale(36),
-              decoration: BoxDecoration(
-                color: visual.background,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                visual.icon,
-                size: context.scale(18),
-                color: visual.color,
-              ),
-            ),
-            SizedBox(width: context.scale(10)),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: context.scale(14),
-                      fontWeight:
-                          isUnread ? FontWeight.w700 : FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: context.scale(4)),
-                  Text(
-                    notification.body,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: context.scale(13),
-                      color: AppColors.textSecondary,
-                      height: 1.35,
-                    ),
-                  ),
-                  SizedBox(height: context.scale(6)),
-                  Row(
-                    children: [
-                      Text(
-                        timeLabel,
-                        style: TextStyle(
-                          fontSize: context.scale(11),
-                          color: AppColors.textHint,
-                        ),
-                      ),
-                      if (isUnread) ...[
-                        SizedBox(width: context.scale(8)),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: context.scale(8),
-                            vertical: context.scale(3),
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            'New',
-                            style: TextStyle(
-                              fontSize: context.scale(10),
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+      ),
+      title: const Text(
+        'Notifications',
+        style: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(
+            Icons.notifications,
+            color: AppColors.primary,
+          ),
+          onPressed: () {},
+        ),
+        const SizedBox(width: 4),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(color: AppColors.border, height: 1),
+      ),
+    );
+  }
+}
+
+class _MarkAllAsReadButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _MarkAllAsReadButton({
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return SizedBox(
+        width: context.scale(16),
+        height: context.scale(16),
+        child: const CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
+    return GestureDetector(
+      onTap: onPressed,
+      child: Text(
+        'Mark all as read',
+        style: TextStyle(
+          fontSize: context.scale(12),
+          fontWeight: FontWeight.w600,
+          color: AppColors.primary,
         ),
       ),
     );
   }
-
-  String _hourString(int hour) {
-    final h = hour % 12;
-    return (h == 0 ? 12 : h).toString().padLeft(2, '0');
-  }
-
-  _NotificationVisual _typeVisual(String type) {
-    switch (type) {
-      case 'reservation_confirmed':
-        return const _NotificationVisual(
-          icon: Icons.check_circle_outline,
-          color: AppColors.success,
-          background: AppColors.successBg,
-        );
-      case 'reservation_cancelled':
-        return const _NotificationVisual(
-          icon: Icons.cancel_outlined,
-          color: AppColors.error,
-          background: AppColors.errorBg,
-        );
-      case 'promotion':
-        return const _NotificationVisual(
-          icon: Icons.local_offer_outlined,
-          color: AppColors.info,
-          background: AppColors.primaryContainer,
-        );
-      default:
-        return const _NotificationVisual(
-          icon: Icons.notifications_outlined,
-          color: AppColors.primary,
-          background: AppColors.primaryContainer,
-        );
-    }
-  }
-}
-
-class _NotificationVisual {
-  final IconData icon;
-  final Color color;
-  final Color background;
-
-  const _NotificationVisual({
-    required this.icon,
-    required this.color,
-    required this.background,
-  });
 }
 
 class _EmptyState extends StatelessWidget {

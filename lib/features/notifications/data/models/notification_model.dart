@@ -19,14 +19,40 @@ class NotificationModel {
 
   bool get isUnread => !isRead;
 
+  String? get primaryActionLabel {
+    final label = data?['action_label'] ?? data?['primary_action'];
+    if (label is String && label.isNotEmpty) return label;
+    return _inferredActions().$1;
+  }
+
+  String? get secondaryActionLabel {
+    final label = data?['secondary_action'];
+    if (label is String && label.isNotEmpty) return label;
+    return _inferredActions().$2;
+  }
+
+  bool get primaryActionIsOutlined => _inferredActions().$3;
+
+  (String?, String?, bool) _inferredActions() {
+    switch (type) {
+      case 'medication_expiring':
+      case 'prescription_expiring':
+        return ('Renew Now', null, false);
+      case 'reservation_expired':
+        return (null, 'Re-order', true);
+      default:
+        return (null, null, false);
+    }
+  }
+
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     // Some backends wrap the actual fields under a `data` key.
     final payload = _asMap(json['data']) ?? json;
 
     return NotificationModel(
       id: _asString(json['id']),
-      title: _asString(payload['title']),
-      body: _asString(payload['body']),
+      title: _asString(payload['title'], fallback: 'Notification'),
+      body: _asString(payload['message']),
       createdAt: _asDate(payload['created_at']) ??
           _asDate(payload['createdAt']) ??
           DateTime.now(),
