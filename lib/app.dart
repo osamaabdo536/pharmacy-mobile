@@ -70,7 +70,7 @@ final GoRouter _router = GoRouter(
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
     GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
 
-    // ─── Full-screen routes (pushed on top, no bottom nav) ───
+    // â”€â”€â”€ Full-screen routes (pushed on top, no bottom nav) â”€â”€â”€
     GoRoute(
       path: '/reservation/:id',
       builder: (context, state) =>
@@ -87,7 +87,7 @@ final GoRouter _router = GoRouter(
       builder: (_, __) => const ChatScreen(),
     ),
 
-    // ─── Bottom navigation shell (3 tabs: Search, Reservations, Profile) ─
+    // â”€â”€â”€ Bottom navigation shell (3 tabs: Search, Reservations, Profile) â”€
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) =>
           MainShell(navigationShell: navigationShell),
@@ -120,6 +120,13 @@ final GoRouter _router = GoRouter(
             GoRoute(
               path: '/reservations',
               builder: (_, __) => const ReservationsListScreen(),
+              routes: [
+                GoRoute(
+                  path: 'details/:id',
+                  builder: (context, state) =>
+                      ReservationScreen(id: state.pathParameters['id']!),
+                ),
+              ],
             ),
           ],
         ),
@@ -137,7 +144,8 @@ final GoRouter _router = GoRouter(
   redirect: (context, state) {
     final isLoggedIn = TokenStorage.hasToken();
     final location = state.matchedLocation;
-    final isPublicRoute = location == '/' ||
+    final isPublicRoute =
+        location == '/' ||
         location == '/onboarding' ||
         location == '/login' ||
         location == '/register';
