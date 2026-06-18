@@ -7,6 +7,7 @@ import '../../../shared/utils/responsive.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../auth/cubit/auth_cubit.dart';
 import '../../auth/cubit/auth_state.dart';
+import 'change_password_sheet.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -89,7 +90,15 @@ class ProfileScreen extends StatelessWidget {
                       title: 'Change Password',
                       subtitle: 'Update your account security credentials',
                       onTap: () {
-                        // TODO: change password flow
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true, // مهم عشان الـ sheet يكبر مع الكيبورد
+                          backgroundColor: AppColors.surface,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (_) => const ChangePasswordSheet(),
+                        );
                       },
                     ),
                     SizedBox(height: context.scale(32)),

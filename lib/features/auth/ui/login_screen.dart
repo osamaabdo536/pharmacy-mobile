@@ -71,18 +71,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // ─── Logo placeholder ─────────────────────
                       Center(
-                        child: Container(
-                          width: context.scale(56),
-                          height: context.scale(56),
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.shield_outlined,
-                            color: Colors.white,
-                            size: context.scale(28),
-                          ),
+                        child: Image.asset(
+                          'assets/images/Dawak_Icon.png',
+                          width: context.scale(72),
+                          height: context.scale(72),
                         ),
                       ),
                       SizedBox(height: context.scale(20)),
