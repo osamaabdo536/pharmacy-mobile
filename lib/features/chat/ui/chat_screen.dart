@@ -266,13 +266,13 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: const [
                 _SuggestionChip(label: 'Where is Panadol?'),
-                SizedBox(width: 8),
                 _SuggestionChip(label: 'I have a headache'),
-                SizedBox(width: 8),
                 _SuggestionChip(label: 'What is Brufen?'),
               ],
             ),
