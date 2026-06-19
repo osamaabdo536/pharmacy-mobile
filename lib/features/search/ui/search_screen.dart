@@ -17,7 +17,8 @@ class SearchScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
-          SearchCubit(SearchRepository(), LocationService())..initializeSearch(),
+          SearchCubit(SearchRepository(), LocationService())
+            ..initializeSearch(),
       child: const _SearchView(),
     );
   }
@@ -49,7 +50,9 @@ class _SearchViewState extends State<_SearchView> {
             final screenWidth = constraints.maxWidth;
             final isNarrow = screenWidth < 380;
             final crossAxisCount = screenWidth >= 600 ? 2 : 1;
-            final cardAspect = crossAxisCount == 2 ? 1.55 : (isNarrow ? 2.7 : 3.05);
+            final cardAspect = crossAxisCount == 2
+                ? 2.8
+                : (isNarrow ? 3.5 : 4.0);
 
             return BlocBuilder<SearchCubit, SearchState>(
               builder: (context, state) {
@@ -76,11 +79,17 @@ class _SearchViewState extends State<_SearchView> {
                       ),
                       SliverPadding(
                         padding: EdgeInsets.fromLTRB(
-                          isNarrow ? 12 : 16, 0, isNarrow ? 12 : 16, 4,
+                          isNarrow ? 12 : 16,
+                          0,
+                          isNarrow ? 12 : 16,
+                          4,
                         ),
                         sliver: SliverToBoxAdapter(
                           child: _buildSearchResults(
-                            context, state, crossAxisCount, cardAspect,
+                            context,
+                            state,
+                            crossAxisCount,
+                            cardAspect,
                           ),
                         ),
                       ),
@@ -89,10 +98,15 @@ class _SearchViewState extends State<_SearchView> {
                         child: _buildSectionTitle(
                           title: 'Recent searches',
                           isNarrow: isNarrow,
-                          actionLabel: state.recentSearches.isEmpty ? null : 'Clear all',
+                          icon: Icons.history,
+                          actionLabel: state.recentSearches.isEmpty
+                              ? null
+                              : 'Clear All',
                           action: state.recentSearches.isEmpty
                               ? null
-                              : () => context.read<SearchCubit>().clearRecentSearches(),
+                              : () => context
+                                    .read<SearchCubit>()
+                                    .clearRecentSearches(),
                         ),
                       ),
                       SliverToBoxAdapter(
@@ -101,16 +115,23 @@ class _SearchViewState extends State<_SearchView> {
                       SliverToBoxAdapter(
                         child: _buildSectionTitle(
                           title: 'Trending medicines',
+                          icon: Icons.trending_up,
                           isNarrow: isNarrow,
                         ),
                       ),
                       SliverPadding(
                         padding: EdgeInsets.fromLTRB(
-                          isNarrow ? 12 : 16, 0, isNarrow ? 12 : 16, 24,
+                          isNarrow ? 12 : 16,
+                          0,
+                          isNarrow ? 12 : 16,
+                          24,
                         ),
                         sliver: SliverToBoxAdapter(
                           child: _buildTrendingMedicines(
-                            context, state, crossAxisCount, cardAspect,
+                            context,
+                            state,
+                            crossAxisCount,
+                            cardAspect,
                           ),
                         ),
                       ),
@@ -193,11 +214,17 @@ class _SearchViewState extends State<_SearchView> {
                   },
                 )
               : IconButton(
-                  icon: const Icon(Icons.filter_list, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.filter_list,
+                    color: AppColors.primary,
+                  ),
                   onPressed: () {},
                 ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 14,
+            horizontal: 16,
+          ),
         ),
       ),
     );
@@ -236,7 +263,10 @@ class _SearchViewState extends State<_SearchView> {
               children: [
                 const Text(
                   'Current location',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -257,25 +287,30 @@ class _SearchViewState extends State<_SearchView> {
     );
   }
 
-
   Widget _buildSectionTitle({
     required String title,
     required bool isNarrow,
     String? actionLabel,
     VoidCallback? action,
+    IconData? icon,
   }) {
     final hPad = isNarrow ? 12.0 : 16.0;
     return Padding(
-      padding: EdgeInsets.fromLTRB(hPad, isNarrow ? 18 : 24, hPad, 8),
+      padding: EdgeInsets.fromLTRB(hPad, isNarrow ? 18 : 24, hPad, 10),
       child: Row(
         children: [
+          if (icon != null) ...[
+            Icon(icon, color: AppColors.primary, size: 18),
+            const SizedBox(width: 8),
+          ],
           Expanded(
             child: Text(
-              title,
+              title.toUpperCase(),
               style: TextStyle(
-                fontSize: isNarrow ? 16 : 18,
-                fontWeight: FontWeight.w700,
+                fontSize: isNarrow ? 12 : 13,
+                fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
+                letterSpacing: 0.8,
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -285,11 +320,16 @@ class _SearchViewState extends State<_SearchView> {
               onPressed: action,
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primary,
-                padding: EdgeInsets.symmetric(horizontal: isNarrow ? 6 : 12),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isNarrow ? 6 : 12,
+                ),
               ),
               child: Text(
                 actionLabel,
-                style: TextStyle(fontSize: isNarrow ? 12 : 14),
+                style: TextStyle(
+                  fontSize: isNarrow ? 12 : 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
         ],
@@ -318,34 +358,47 @@ class _SearchViewState extends State<_SearchView> {
       padding: EdgeInsets.symmetric(horizontal: hPad),
       child: Column(
         children: state.recentSearches.map((term) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: ListTile(
-              onTap: () {
-                _searchController.text = term;
-                context.read<SearchCubit>().searchDrugs(term);
-              },
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: isNarrow ? 12 : 16,
-                vertical: isNarrow ? 2 : 6,
+          return InkWell(
+            onTap: () {
+              _searchController.text = term;
+              context.read<SearchCubit>().searchDrugs(term);
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isNarrow ? 4 : 0,
+                vertical: isNarrow ? 9 : 12,
               ),
-              leading: const Icon(Icons.history, color: AppColors.primary),
-              title: Text(
-                term,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: isNarrow ? 13 : 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 18),
-                onPressed: () => context.read<SearchCubit>().removeRecentSearch(term),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.search,
+                    color: AppColors.textSecondary,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      term,
+                      style: TextStyle(
+                        fontSize: isNarrow ? 14 : 16,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () =>
+                        context.read<SearchCubit>().removeRecentSearch(term),
+                    icon: const Icon(Icons.close, size: 18),
+                    color: AppColors.textSecondary,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 32,
+                      height: 32,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -409,7 +462,9 @@ class _SearchViewState extends State<_SearchView> {
     if (state.drugSearchStatus == DrugSearchStatus.loading) {
       return Padding(
         padding: const EdgeInsets.only(top: 16),
-        child: LoadingWidget(message: 'Searching for ${state.searchQuery}...'),
+        child: LoadingWidget(
+          message: 'Searching for ${state.searchQuery}...',
+        ),
       );
     }
 

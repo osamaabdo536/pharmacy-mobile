@@ -257,7 +257,7 @@ class _DrugDetailScreenState extends State<DrugDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: pharmacy info + quantity stepper ──
+          // Top row: pharmacy info.
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -338,11 +338,10 @@ class _DrugDetailScreenState extends State<DrugDetailScreen> {
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 12),
 
-          // ── Bottom: price on left | stepper + reserve on right ──
+          // Bottom row: price, quantity, and reserve action.
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left: price + original + discount badge
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +398,6 @@ class _DrugDetailScreenState extends State<DrugDetailScreen> {
 
               const SizedBox(width: 10),
 
-              // Right: stepper on top, reserve button below
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -573,11 +571,9 @@ class _DrugDetailScreenState extends State<DrugDetailScreen> {
       widget.drug.dosageForm,
       widget.drug.manufacturer,
     ].where((p) => p != null && p.trim().isNotEmpty).cast<String>().toList();
-    return parts.isEmpty ? 'Medicine details' : parts.join(' · ');
+    return parts.isEmpty ? 'Medicine details' : parts.join(' - ');
   }
 }
-
-// ─── Reservation Confirmation Dialog ─────────────────────────────────────────
 
 class _ReservationDialog extends StatelessWidget {
   final String drugName;
@@ -594,7 +590,6 @@ class _ReservationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Responsive inset: tight on small screens, generous on big ones
     final screenWidth = MediaQuery.sizeOf(context).width;
     final hInset = screenWidth < 400 ? 20.0 : 32.0;
 
@@ -607,7 +602,6 @@ class _ReservationDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
             Row(
               children: [
                 Container(
@@ -650,7 +644,6 @@ class _ReservationDialog extends StatelessWidget {
             const Divider(height: 1, color: AppColors.border),
             const SizedBox(height: 16),
 
-            // Details
             _DetailRow(
               icon: Icons.medication_outlined,
               label: 'Medicine',
@@ -681,7 +674,6 @@ class _ReservationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Actions
             Row(
               children: [
                 Expanded(

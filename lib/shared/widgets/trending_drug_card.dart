@@ -17,13 +17,7 @@ class TrendingDrugCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x1A000000),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: const Color(0xFFEFF0F6)),
         ),
         child: InkWell(
           onTap: () => _openDetails(context),
@@ -32,6 +26,7 @@ class TrendingDrugCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   drug.name,
@@ -55,7 +50,7 @@ class TrendingDrugCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const Spacer(),
+                const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   height: 42,
@@ -106,7 +101,7 @@ class TrendingDrugCard extends StatelessWidget {
       return parts.join(' ');
     }
 
-    return drug.manufacturer ?? 'Generic';
+    return drug.manufacturer ?? '';
   }
 
   void _openDetails(BuildContext context) {
