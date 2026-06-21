@@ -164,28 +164,7 @@ class _NotificationsAppBar extends StatelessWidget implements PreferredSizeWidge
         padding: const EdgeInsets.only(left: 8),
         child: IconButton(
           onPressed: onBack,
-          icon: ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/images/Dawak_Icon.png',
-              width: 28,
-              height: 28,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.shield_outlined,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ),
-            ),
-          ),
+          icon: Icon(Icons.arrow_back)
         ),
       ),
       title: const Text(

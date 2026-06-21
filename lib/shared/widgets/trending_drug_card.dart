@@ -26,34 +26,40 @@ class TrendingDrugCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
+                // ─── Name ───────────────────────────────────
                 Text(
                   drug.name,
                   style: const TextStyle(
                     color: AppColors.textPrimary,
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     height: 1.15,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
+
+                // ─── Subtitle ────────────────────────────────
                 Text(
                   _subtitle,
                   style: const TextStyle(
                     color: AppColors.textSecondary,
-                    fontSize: 13,
+                    fontSize: 12,
                     height: 1.2,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 12),
+
+                const Spacer(),
+
+                // ─── Details button ──────────────────────────
                 SizedBox(
                   width: double.infinity,
-                  height: 42,
+                  height: 38,
                   child: ElevatedButton(
                     onPressed: drug.id.isNotEmpty
                         ? () => _openDetails(context)
@@ -68,7 +74,7 @@ class TrendingDrugCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       textStyle: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -77,8 +83,8 @@ class TrendingDrugCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text('DETAILS'),
-                        SizedBox(width: 18),
-                        Icon(Icons.chevron_right, size: 22),
+                        SizedBox(width: 8),
+                        Icon(Icons.chevron_right, size: 20),
                       ],
                     ),
                   ),

@@ -52,7 +52,7 @@ class _SearchViewState extends State<_SearchView> {
             final crossAxisCount = screenWidth >= 600 ? 2 : 1;
             final cardAspect = crossAxisCount == 2
                 ? 2.8
-                : (isNarrow ? 3.5 : 4.0);
+                : (isNarrow ? 3.2 : 3.6);
 
             return BlocBuilder<SearchCubit, SearchState>(
               builder: (context, state) {
