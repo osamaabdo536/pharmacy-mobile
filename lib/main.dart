@@ -12,25 +12,23 @@ import 'firebase_options.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
-
-  // 2. Init local storage — must happen before GoRouter's redirect
-  //    (in app.dart) calls TokenStorage.hasToken() synchronously
   await TokenStorage.init();
 
-  // 3. Init Firebase — BLOCKED until firebase_options.dart exists
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-  await NotificationService.init();
-  final token = await NotificationService.getToken();
-  debugPrint('FCM Token: $token');
 
-  // 4. Init Supabase
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
   await Supabase.initialize(
     url: ApiConstants.supabaseUrl,
     anonKey: ApiConstants.supabaseAnonKey,
   );
 
   runApp(const MyApp());
+
+  // init بعد runApp
+  await NotificationService.init();
+  final token = await NotificationService.getToken();
+  debugPrint('FCM Token: $token');
 }
