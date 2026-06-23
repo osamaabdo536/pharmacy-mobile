@@ -1,7 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pharmacy_mobile/features/auth/data/models/auth_repository.dart';
 
+import '../../../core/constants/api_constants.dart';
 import '../../../core/errors/failures.dart';
+import '../../../core/network/dio_client.dart';
+import '../../../core/services/notification_service.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -68,9 +71,17 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthUnauthenticated());
   }
 
-  /// TODO (Person 5, after Firebase configure): call
-  /// `PATCH /users/me/fcm-token` with `FirebaseMessaging.instance.getToken()`.
-  void _registerFcmToken() {
-    // no-op for now
+
+  void _registerFcmToken() async {
+    try {
+      final token = await NotificationService.getToken();
+      if (token == null) return;
+      await DioClient.instance.patch(
+        ApiConstants.updateFcmToken,
+        data: {'fcm_token': token},
+      );
+    } catch (_) {
+      // non-critical — don't block the login flow
+    }
   }
 }

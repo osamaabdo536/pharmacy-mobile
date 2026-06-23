@@ -25,7 +25,7 @@ import 'features/chat/ui/chat_screen.dart';
 import 'features/profile/ui/profile_screen.dart';
 import 'features/notifications/ui/notifications_screen.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends StatelessWidget {
@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
 }
 
 final GoRouter _router = GoRouter(
-  navigatorKey: _rootNavigatorKey,
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (_, __) => const SplashScreen()),
@@ -78,12 +78,12 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/notifications',
-      parentNavigatorKey: _rootNavigatorKey,
+      parentNavigatorKey: rootNavigatorKey,
       builder: (_, __) => const NotificationsScreen(),
     ),
     GoRoute(
       path: '/chat',
-      parentNavigatorKey: _rootNavigatorKey,
+      parentNavigatorKey: rootNavigatorKey,
       builder: (_, __) => const ChatScreen(),
     ),
 
