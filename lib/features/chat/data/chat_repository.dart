@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
@@ -18,8 +20,11 @@ class ChatRepository {
     double? longitude,
   }) async {
     try {
+      // Receive as plain string so we can sanitize before JSON parsing.
+      // This prevents Bad UTF-8 crashes from special characters in drug names.
       final response = await _dio.post(
         ApiConstants.aiChat,
+        options: Options(responseType: ResponseType.plain),
         data: {
           'message': message,
           if (latitude != null) 'latitude': latitude,
@@ -29,11 +34,24 @@ class ChatRepository {
         },
       );
 
-      return Right(ChatResponse.fromJson(response.data['data']));
+      // Sanitize: replace UTF-8 replacement character and other
+      // problematic characters that come from drug name data.
+      final rawString = (response.data as String)
+          .replaceAll(
+            '\uFFFD',
+            '',
+          ) // UTF-8 replacement character (◆ encoded badly)
+          .replaceAll('\u25C6', ' ') // ◆ black diamond
+          .replaceAll('\u0000', ''); // null bytes
+
+      final jsonMap = json.decode(rawString) as Map<String, dynamic>;
+      return Right(ChatResponse.fromJson(jsonMap['data']));
     } on DioException catch (e) {
       return Left(mapDioExceptionToFailure(e));
-    } catch (_) {
-      return const Left(ServerFailure());
+    } catch (e) {
+      return const Left(
+        ServerFailure('Something went wrong, please try again'),
+      );
     }
   }
 }
