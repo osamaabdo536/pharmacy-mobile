@@ -23,11 +23,14 @@ class UserModel extends Equatable {
       String role,
       ) {
     final metadata = supabaseUser.userMetadata ?? {};
+    final appMetadata = supabaseUser.appMetadata ?? {};
     return UserModel(
       id: supabaseUser.id,
       email: supabaseUser.email ?? '',
-      fullName: metadata['full_name'] as String? ?? '',
-      phoneNumber: metadata['phone_number'] as String?,
+      fullName: metadata['full_name'] as String? ??
+          appMetadata['full_name'] as String? ?? '',
+      phoneNumber: metadata['phone_number'] as String? ??
+          metadata['phone'] as String?,
       role: role,
     );
   }

@@ -19,20 +19,25 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await _supabase.auth.signUp(
+      await DioClient.instance.post(
+        '/auth/register',
+        data: {
+          'email': email,
+          'password': password,
+          'full_name': fullName,
+          'phone': phone,
+        },
+      );
+
+
+      final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
-        data: {
-          'full_name': fullName,
-          'phone_number': phone,
-        },
       );
 
       final session = response.session;
       if (session == null) {
-        // Supabase project has "Confirm email" enabled — no session
-        // until the user verifies their email.
-        return const Left(EmailConfirmationFailure());
+        return const Left(AuthFailure('Registration successful. Please log in.'));
       }
 
       await TokenStorage.saveTokens(
@@ -41,6 +46,8 @@ class AuthRepository {
       );
 
       return _fetchRoleAndValidate();
+    } on DioException catch (e) {
+      return Left(mapDioExceptionToFailure(e));
     } on supabase.AuthException catch (e) {
       return Left(AuthFailure(e.message));
     } catch (_) {
@@ -94,8 +101,8 @@ class AuthRepository {
 
   Future<Either<Failure, UserModel>> _fetchRoleAndValidate() async {
     try {
-      final response = await DioClient.instance.post(ApiConstants.authRole);
-      final data = response.data['data'] as Map<String, dynamic>;
+      final roleResponse = await DioClient.instance.post(ApiConstants.authRole);
+      final data = roleResponse.data['data'] as Map<String, dynamic>;
       final role = data['role'] as String;
 
       final supabaseUser = _supabase.auth.currentUser;
@@ -103,14 +110,32 @@ class AuthRepository {
         return const Left(AuthFailure('Session expired, please log in again'));
       }
 
-      final user = UserModel.fromSupabaseUser(supabaseUser, role);
-
-      if (user.role != 'user') {
+      if (role != 'user') {
         await logout();
         return const Left(
           AuthFailure('This account does not have access to this app.'),
         );
       }
+
+
+      String fullName = '';
+      String? phone;
+      try {
+        final profileResponse = await DioClient.instance.get('/users/me');
+        final profileData = profileResponse.data['data'] as Map<String, dynamic>;
+        fullName = profileData['full_name'] as String? ?? '';
+        phone = profileData['phone'] as String?;
+      } catch (_) {
+
+      }
+
+      final user = UserModel(
+        id: supabaseUser.id,
+        email: supabaseUser.email ?? '',
+        fullName: fullName,
+        phoneNumber: phone,
+        role: role,
+      );
 
       return Right(user);
     } on DioException catch (e) {
