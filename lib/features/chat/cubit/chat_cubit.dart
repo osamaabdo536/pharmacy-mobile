@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:flutter/foundation.dart';
 import '../../../core/utils/location_service.dart';
 import '../data/chat_repository.dart';
 import '../data/models/chat_message.dart';
@@ -57,6 +57,13 @@ class ChatCubit extends Cubit<ChatState> {
         emit(state.copyWith(isLoading: false, error: failure.message));
       },
       (response) async {
+        debugPrint(
+          '[CUBIT DEBUG] updatedHistory length from response: ${response.updatedHistory.length}',
+        );
+        debugPrint(
+          '[CUBIT DEBUG] first item role: ${response.updatedHistory.isNotEmpty ? response.updatedHistory.first.role : "EMPTY"}',
+        );
+
         final reply = response.reply.trim();
 
         // Ignore empty replies
